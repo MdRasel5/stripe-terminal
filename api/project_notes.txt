@@ -1,0 +1,10 @@
+
+# Rreact এ একটা পেজ থাকবে, সেখানে Reader টা সিলেক্ট করার জন্য একটা সিলেক্ট অপশন থাকবে এবং ৪ টা বাটন থাকবে,   Process,  Simulate -  Capture -  Cancle
+
+# Process - Process বাটনে ক্লিক করলে amount টা Reader Matchine এ দেখাবে, এবং stripe dashboard এ যাবে এবং এই payment এর status থাকবে incomplete. 
+# তারপর কোনো কাস্টমার যখন তার কার্ড দিয়ে পেমেন্ট টা করতে তখন মেশিনে দেখাবে payment complete এবং stripe dashboard এ আরেকটি ডাটা যাবে, সেখানে এবার status দেখাবে uncapture. 
+
+# তারপর যখন pos page থেকে capture বাটন এ ক্লিক করা হবে, তখন আরেকটা data যাবে, সেখানে দেখাবে payment success. 
+
+ # আর এখানে Simulate button টা রাখা হয়েছে, আমাদের কাছে reader মেশিন টা না থাকার কারনে, এই বাটন এ ক্লিক করলে, কাস্টমার card swipe করার কাজ টা করবে। 
+
