@@ -8,23 +8,7 @@ const StripeTerminal = () => {
   const [amount, setAmount] = useState("");
   const [paymentIntent, setPaymentIntent] = useState(null);
   const [messages, setMessages] = useState([]);
-
-  // Fetch readers on component mount
-  // useEffect(() => {
-  //   const fetchReaders = async () => {
-  //     try {
-  //       const response = await fetch("http://127.0.0.1:8000/api/readers");
-  //       const result = await response.json();
-
-  //       // Assuming result.readersList.data is an array
-  //       setReadersList(result.readersList.data);
-  //     } catch (error) {
-  //       console.error("Error fetching readers:", error.message);
-  //     }
-  //   };
-
-  //   fetchReaders();
-  // }, []);
+  const [commission, setCommission] = useState("");
 
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -72,7 +56,7 @@ const StripeTerminal = () => {
           headers: {
             "Content-Type": "application/json",
           },
-          body: JSON.stringify({ amount, readerId }),
+          body: JSON.stringify({ amount, readerId, commission }), // Include commission in the request
         }
       );
 
@@ -89,7 +73,7 @@ const StripeTerminal = () => {
       setPaymentIntent(result.paymentIntent);
 
       addMessage(
-        `Processing payment for ${amount} on reader ${result.reader.label}`
+        `Processing payment for ${amount} with commission ${commission} on reader ${result.reader.label}`
       );
     } catch (error) {
       console.error("Error processing payment:", error.message);
@@ -246,7 +230,6 @@ const StripeTerminal = () => {
                 </option>
               ))}
           </select> */}
-
           {loading ? (
             <p>Loading readers...</p>
           ) : error ? (
@@ -270,7 +253,6 @@ const StripeTerminal = () => {
                 ))}
             </select>
           )}
-
           <section className="sr-form-row">
             <label htmlFor="amount">Amount:</label>
             <input
@@ -281,6 +263,16 @@ const StripeTerminal = () => {
             />
           </section>
 
+          {/* Commission input field */}
+          <section className="sr-form-row">
+            <label htmlFor="commission">Commission:</label>
+            <input
+              value={commission}
+              onChange={(e) => setCommission(e.target.value)}
+              id="commission"
+              className="sr-input"
+            />
+          </section>
           <section className="button-row">
             <button
               type="button"
@@ -299,7 +291,6 @@ const StripeTerminal = () => {
               Capture
             </button>
           </section>
-
           <section className="button-row">
             <button
               id="simulate-payment-button"
@@ -313,7 +304,6 @@ const StripeTerminal = () => {
               Cancel
             </button>
           </section>
-
           {/* Include SrMessages component here if needed */}
           <Messages messages={messages} />
         </form>

@@ -28,3 +28,5 @@ Route::post('/readers/simulate-payment', [StripeController::class, 'simulatePaym
 Route::post('/payments/capture', [StripeController::class, 'capturePayment']);
 
 Route::post('/payments/cancel-payment', [StripeController::class, 'cancelPayment']);
+
+Route::post('/payments/create-commission-intent', [StripeController::class, 'createCommissionPaymentIntent']);

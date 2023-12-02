@@ -45,15 +45,24 @@ class StripeController extends Controller
             // Set the Stripe API key
             Stripe::setApiKey(config('services.stripe.secret'));
 
-            // Get the amount and reader ID from the request
+            // Get the amount, reader ID, and commission from the request
             $amount = $request->input('amount');
             $readerId = $request->input('readerId');
+            $commission = $request->input('commission');
 
-            // Create a payment intent
+            // Create a payment intent for the connected account
             $paymentIntent = PaymentIntent::create([
                 'currency' => 'usd',
                 'amount' => $amount,
-                'payment_method_types' => ['card_present'],
+                'payment_method_types' => ['card'], // Use 'card' for credit/debit card payments
+                'capture_method' => 'manual',
+            ]);
+
+            // Create a payment intent for the commission
+            $commissionPaymentIntent = PaymentIntent::create([
+                'currency' => 'usd',
+                'amount' => $commission,
+                'payment_method_types' => ['card'],
                 'capture_method' => 'manual',
             ]);
 
@@ -65,13 +74,18 @@ class StripeController extends Controller
                 'payment_intent' => $paymentIntent->id,
             ]);
 
-            // Return the response with the reader and payment intent details
-            return response()->json(['reader' => $reader, 'paymentIntent' => $paymentIntent]);
+            // Return the response with the reader, payment intent, and commission payment intent details
+            return response()->json([
+                'reader' => $reader,
+                'paymentIntent' => $paymentIntent,
+                'commissionPaymentIntent' => $commissionPaymentIntent,
+            ]);
         } catch (\Exception $e) {
             // Return an error response if an exception occurs
             return response()->json(['error' => ['message' => $e->getMessage()]]);
         }
     }
+
 
     public function simulatePayment(Request $request)
     {
