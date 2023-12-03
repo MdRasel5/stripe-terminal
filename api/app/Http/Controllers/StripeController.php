@@ -9,80 +9,78 @@ use Stripe\Stripe;
 use Stripe\Terminal\Reader;
 use Stripe\PaymentIntent;
 use Stripe\Service\TestHelpers\Terminal\ReaderService;
+use Stripe\Terminal\ConnectionToken;
+use Stripe\Terminal\Location;
 
 class StripeController extends Controller
 {
     public function listReaders(Request $request)
     {
         try {
-            // Manually set the connected account ID
-            $connectedAccountId = $request->input('connected_account_id'); // Replace with your connected account ID
+            $connectedAccountId = $request->input('connected_account_id');
 
-            // Set the Stripe API key
             Stripe::setApiKey(config('services.stripe.secret'));
 
-            // Fetch the list of readers for the connected account
             $readers = Reader::all([], ['stripe_account' => $connectedAccountId]);
 
-            // Dump the response to the browser
-            // dd($readers);
-
-            // You can continue with your logic here and return a response
             return response()->json(['readersList' => $readers]);
         } catch (\Exception $e) {
-            // Log the error if an exception occurs
-            Log::error('Error in yourApiEndpoint: ' . $e->getMessage());
-
-            // Return an error response
+            Log::error('Error in listReaders: ' . $e->getMessage());
             return response()->json(['error' => $e->getMessage()], 500);
         }
     }
 
-
     public function processPayment(Request $request)
     {
         try {
-            // Set the Stripe API key
             Stripe::setApiKey(config('services.stripe.secret'));
 
-            // Get the amount, reader ID, and commission from the request
             $amount = $request->input('amount');
             $readerId = $request->input('readerId');
             $commission = $request->input('commission');
+            $connectedAccountId = 'acct_1OCTtILx02PcYbJn';
 
-            // Create a payment intent for the connected account
+            // Create Location belonging to a connected account
+            $location = Location::create([
+                'display_name' => 'HQ',
+                'address' => [
+                    'line1' => '1272 Valencia Street',
+                    'city' => 'San Francisco',
+                    'state' => 'CA',
+                    'country' => 'US',
+                    'postal_code' => '94110',
+                ]
+            ], [
+                'stripe_account' => $connectedAccountId,
+            ]);
+
+            $reader = Reader::retrieve($readerId, ['stripe_account' => $connectedAccountId]);
+
+            // Create ConnectionToken for the Terminal SDK
+            $connectionToken = ConnectionToken::create(['location' => $location->id], ['stripe_account' => $connectedAccountId]);
+
+            // Create PaymentIntent for direct charges
             $paymentIntent = PaymentIntent::create([
-                'currency' => 'usd',
                 'amount' => $amount,
-                'payment_method_types' => ['card'], // Use 'card' for credit/debit card payments
-                'capture_method' => 'manual',
-            ]);
-
-            // Create a payment intent for the commission
-            $commissionPaymentIntent = PaymentIntent::create([
                 'currency' => 'usd',
-                'amount' => $commission,
-                'payment_method_types' => ['card'],
+                'payment_method_types' => ['card_present'],
                 'capture_method' => 'manual',
+                'application_fee_amount' => $commission,
+            ], [
+                'stripe_account' => $connectedAccountId,
             ]);
-
-            // Retrieve the Reader by ID
-            $reader = Reader::retrieve($readerId);
 
             // Process payment on the specified reader
-            $reader->processPaymentIntent([
-                'payment_intent' => $paymentIntent->id,
-            ]);
+            $reader->processPaymentIntent(['payment_intent' => $paymentIntent->id]);
 
-            // Return the response with the reader, payment intent, and commission payment intent details
             return response()->json([
                 'reader' => $reader,
                 'paymentIntent' => $paymentIntent,
-                'commissionPaymentIntent' => $commissionPaymentIntent,
+                'application_fee_amount' => $commission,
             ]);
         } catch (\Exception $e) {
-            // Return an error response if an exception occurs
-            return response()->json(['error' => ['message' => $e->getMessage()]]);
+            Log::error('Error in processPayment: ' . $e->getMessage());
+            return response()->json(['error' => $e->getMessage()], 500);
         }
     }
 
