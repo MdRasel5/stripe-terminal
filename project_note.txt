@@ -1,0 +1,8 @@
+ধাপঃ
+১) Reader এর মাধ্যমে Payment করা। 
+২) Connect account এ Reader এড করা এবং সেটা দিয়ে পেমেন্ট করা। 
+৩) পেমেন্ট করার পরে application_fee/commission amount main stripe account এ পাঠিয়ে দেওয়া। 
+
+
+# Reader কে show করানোর জন্য আমরা connect account এর secret key use করবো। আর payment intent এর জন্য আমরা main stripe er secret key use করবো। 
+

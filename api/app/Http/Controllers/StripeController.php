@@ -40,24 +40,7 @@ class StripeController extends Controller
             $commission = $request->input('commission');
             $connectedAccountId = 'acct_1OCTtILx02PcYbJn';
 
-            // Create Location belonging to a connected account
-            $location = Location::create([
-                'display_name' => 'HQ',
-                'address' => [
-                    'line1' => '1272 Valencia Street',
-                    'city' => 'San Francisco',
-                    'state' => 'CA',
-                    'country' => 'US',
-                    'postal_code' => '94110',
-                ]
-            ], [
-                'stripe_account' => $connectedAccountId,
-            ]);
-
             $reader = Reader::retrieve($readerId, ['stripe_account' => $connectedAccountId]);
-
-            // Create ConnectionToken for the Terminal SDK
-            $connectionToken = ConnectionToken::create(['location' => $location->id], ['stripe_account' => $connectedAccountId]);
 
             // Create PaymentIntent for direct charges
             $paymentIntent = PaymentIntent::create([
