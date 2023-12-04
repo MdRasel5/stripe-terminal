@@ -33,7 +33,8 @@ class StripeController extends Controller
     public function processPayment(Request $request)
     {
         try {
-            Stripe::setApiKey(config('services.stripe.secret'));
+            // Stripe::setApiKey(config('services.stripe.secret'));
+            Stripe::setApiKey('sk_test_51OCTILLa933p6qD6Ay0jriVzyOdEdV2gaYdT34DGgkNQyz8ow12CxffKP8vXF4ksm6bItVEk25dgWPM7xkqeBBne00QDKg2NHY');
 
             $amount = $request->input('amount');
             $readerId = $request->input('readerId');

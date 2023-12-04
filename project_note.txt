@@ -6,3 +6,19 @@
 
 # Reader কে show করানোর জন্য আমরা connect account এর secret key use করবো। আর payment intent এর জন্য আমরা main stripe er secret key use করবো। 
 
+sk_test_51OCTILLa933p6qD6Ay0jriVzyOdEdV2gaYdT34DGgkNQyz8ow12CxffKP8vXF4ksm6bItVEk25dgWPM7xkqeBBne00QDKg2NHY
+
+
+
+
+
+আমরা processPayment  এ $connectedAccountId এটা pass করার কারনে হয়তবা পেমেন্ট টা connect এ যাচ্ছে, এখন আমরা যখন simulate / capture করতেছি, তখনও এটা pass করে দিতে পারি, তাহলে হয়তবা কাজ করবে। 
+
+
+
+
+
+
+
+
+
