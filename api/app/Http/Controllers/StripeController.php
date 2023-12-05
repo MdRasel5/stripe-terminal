@@ -19,7 +19,7 @@ class StripeController extends Controller
         try {
             $connectedAccountId = $request->input('connected_account_id');
 
-            Stripe::setApiKey(config('services.stripe.secret'));
+            Stripe::setApiKey(config('services.stripe.connected_account_secret'));
 
             $readers = Reader::all([], ['stripe_account' => $connectedAccountId]);
 
@@ -33,8 +33,8 @@ class StripeController extends Controller
     public function processPayment(Request $request)
     {
         try {
-            // Stripe::setApiKey(config('services.stripe.secret'));
-            Stripe::setApiKey('sk_test_51OCTILLa933p6qD6Ay0jriVzyOdEdV2gaYdT34DGgkNQyz8ow12CxffKP8vXF4ksm6bItVEk25dgWPM7xkqeBBne00QDKg2NHY');
+            Stripe::setApiKey(config('services.stripe.secret'));
+            // Stripe::setApiKey('sk_test_51OCTILLa933p6qD6Ay0jriVzyOdEdV2gaYdT34DGgkNQyz8ow12CxffKP8vXF4ksm6bItVEk25dgWPM7xkqeBBne00QDKg2NHY');
 
             $amount = $request->input('amount');
             $readerId = $request->input('readerId');
@@ -72,16 +72,17 @@ class StripeController extends Controller
     public function simulatePayment(Request $request)
     {
         try {
-            Stripe::setApiKey(config('services.stripe.secret'));
+            // Stripe::setApiKey(config('services.stripe.secret'));
 
             $readerId = $request->input('readerId');
+            $connectedAccountId = 'acct_1OCTtILx02PcYbJn';
 
             // Assuming this is the correct way to create a Stripe client instance
             $stripeClient = new \Stripe\StripeClient(config('services.stripe.secret'));
             $readerService = new ReaderService($stripeClient);
 
             // Simulate a payment on the specified reader
-            $reader = $readerService->presentPaymentMethod($readerId);
+            $reader = $readerService->presentPaymentMethod($readerId, [], ['stripe_account' => $connectedAccountId]);
 
             return response()->json(['reader' => $reader]);
         } catch (\Exception $e) {

@@ -12,6 +12,7 @@ const StripeTerminal = () => {
 
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const connectedAccountId = "acct_1OCTtILx02PcYbJn";
 
   useEffect(() => {
     const fetchReaders = async () => {
@@ -89,7 +90,10 @@ const StripeTerminal = () => {
           headers: {
             "Content-Type": "application/json",
           },
-          body: JSON.stringify({ readerId: reader.id }),
+          body: JSON.stringify({
+            readerId,
+            stripe_account: connectedAccountId,
+          }),
         }
       );
 
