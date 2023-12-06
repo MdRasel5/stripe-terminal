@@ -9,8 +9,10 @@ use Stripe\Stripe;
 use Stripe\Terminal\Reader;
 use Stripe\PaymentIntent;
 use Stripe\Service\TestHelpers\Terminal\ReaderService;
+use Stripe\StripeClient;
 use Stripe\Terminal\ConnectionToken;
 use Stripe\Terminal\Location;
+use Stripe\Transfer;
 
 class StripeController extends Controller
 {
@@ -34,7 +36,6 @@ class StripeController extends Controller
     {
         try {
             Stripe::setApiKey(config('services.stripe.secret'));
-            // Stripe::setApiKey('sk_test_51OCTILLa933p6qD6Ay0jriVzyOdEdV2gaYdT34DGgkNQyz8ow12CxffKP8vXF4ksm6bItVEk25dgWPM7xkqeBBne00QDKg2NHY');
 
             $amount = $request->input('amount');
             $readerId = $request->input('readerId');
@@ -68,25 +69,90 @@ class StripeController extends Controller
         }
     }
 
+    public function transferApplicationFee(Request $request)
+    {
+        try {
+            Stripe::setApiKey(config('services.stripe.secret'));
+
+            $paymentIntentId = $request->input('paymentIntentId');
+            $commission = $request->input('commission');
+            $platformAccountId = 'acct_1OCTILLa933p6qD6'; // Replace with your actual platform account ID
+
+            // Retrieve the PaymentIntent to get the connected account ID
+            $paymentIntent = PaymentIntent::retrieve($paymentIntentId);
+
+            // Create a Transfer to move the application fee to the platform account
+            $transfer = Transfer::create([
+                'amount' => $commission,
+                'currency' => 'usd',
+                'destination' => $platformAccountId,
+                'transfer_group' => $paymentIntentId, // Link the transfer to the payment
+            ]);
+
+            return response()->json(['transfer' => $transfer]);
+        } catch (\Exception $e) {
+            Log::error('Error in transferApplicationFee: ' . $e->getMessage());
+            return response()->json(['error' => $e->getMessage()], 500);
+        }
+    }
+
+
+    // public function simulatePayment(Request $request)
+    // {
+    //     try {
+    //         // Stripe::setApiKey(config('services.stripe.secret'));
+
+    //         $readerId = $request->input('readerId');
+    //         $connectedAccountId = 'acct_1OCTtILx02PcYbJn';
+
+    //         // Assuming this is the correct way to create a Stripe client instance
+    //         $stripeClient = new \Stripe\StripeClient(config('services.stripe.secret'));
+    //         $readerService = new ReaderService($stripeClient);
+
+    //         // Simulate a payment on the specified reader
+    //         $reader = $readerService->presentPaymentMethod($readerId, [], ['stripe_account' => $connectedAccountId]);
+
+    //         return response()->json(['reader' => $reader]);
+    //     } catch (\Exception $e) {
+    //         return response()->json(['error' => ['message' => $e->getMessage()]]);
+    //     }
+    // }
 
     public function simulatePayment(Request $request)
     {
         try {
-            // Stripe::setApiKey(config('services.stripe.secret'));
-
             $readerId = $request->input('readerId');
             $connectedAccountId = 'acct_1OCTtILx02PcYbJn';
 
-            // Assuming this is the correct way to create a Stripe client instance
-            $stripeClient = new \Stripe\StripeClient(config('services.stripe.secret'));
-            $readerService = new ReaderService($stripeClient);
+            // Assuming the processPayment method returns the actual amounts
+            $processPaymentResponse = $this->processPayment($request);
 
-            // Simulate a payment on the specified reader
-            $reader = $readerService->presentPaymentMethod($readerId, [], ['stripe_account' => $connectedAccountId]);
+            if (is_array($processPaymentResponse) && !empty($processPaymentResponse['error'])) {
+                $actualAmount = $processPaymentResponse['paymentIntent']['amount'];
+                $actualApplicationFee = $processPaymentResponse['application_fee_amount'];
 
-            return response()->json(['reader' => $reader]);
+                // Simulate a payment on the specified reader using the existing connection token
+                $simulateResponse = PaymentIntent::create([
+                    'payment_method' => $request->input('payment_method_id'),
+                    'amount' => $actualAmount,
+                    'currency' => 'usd',
+                    'capture_method' => 'manual',
+                    'application_fee_amount' => $actualApplicationFee,
+                    'transfer_data' => [
+                        'destination' => $connectedAccountId,
+                    ],
+                ], ['stripe_account' => $connectedAccountId]);
+
+                return response()->json(['simulateResponse' => $simulateResponse]);
+            } else {
+                // Handle the error from the processPayment method
+                $errorMessage = is_array($processPaymentResponse) ? $processPaymentResponse['error']->getMessage() : 'Unknown error';
+                Log::error('Error in simulatePayment: ' . $errorMessage);
+                return response()->json(['error' => ['message' => $errorMessage]], 500);
+            }
         } catch (\Exception $e) {
-            return response()->json(['error' => ['message' => $e->getMessage()]]);
+            Log::error('Error in simulatePayment: ' . $e->getMessage());
+            return response()->json(['error' => ['message' => $e->getMessage(), 'trace' => $e->getTraceAsString()]], 500);
         }
     }
 
