@@ -1,3 +1,5 @@
+implement a payment flow using Stripe that involves processing a payment, simulating the payment using Stripe Terminal, and capturing the payment, with the ultimate goal of transferring funds to a connected Stripe account and collecting a platform fee.
+
 ধাপঃ
 ১) Reader এর মাধ্যমে Payment করা। 
 ২) Connect account এ Reader এড করা এবং সেটা দিয়ে পেমেন্ট করা। 
@@ -14,7 +16,14 @@ sk_test_51OCTILLa933p6qD6Ay0jriVzyOdEdV2gaYdT34DGgkNQyz8ow12CxffKP8vXF4ksm6bItVE
 
 আমরা processPayment  এ $connectedAccountId এটা pass করার কারনে হয়তবা পেমেন্ট টা connect এ যাচ্ছে, এখন আমরা যখন simulate / capture করতেছি, তখনও এটা pass করে দিতে পারি, তাহলে হয়তবা কাজ করবে। 
 
+----------
 
+Lunch এর পরের কাজ হচ্ছে, 
+simulate Payment and capture payment এই দুটিকে কাজ করানো। 
+তারপর fee টাকে platform account এ transfer করা। 
+
+
+'location' => 'tml_FWd0g7hxn0BCTb', // Replace with your actual location ID
 
 
 

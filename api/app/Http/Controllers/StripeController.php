@@ -69,6 +69,36 @@ class StripeController extends Controller
         }
     }
 
+    public function simulatePayment(Request $request)
+    {
+        try {
+            // Stripe::setApiKey(config('services.stripe.secret'));
+
+            $readerId = $request->input('readerId');
+            $connectedAccountId = 'acct_1OCTtILx02PcYbJn';
+
+            // Assuming this is the correct way to create a Stripe client instance
+            // $stripeClient = new \Stripe\StripeClient(config('services.stripe.secret'));
+
+            $connectedAccountSecretKey = 'sk_test_51OCTtILx02PcYbJn50y1Ws1iQswvo6DV7cRo20p99EgKZZ9cweFSWRetJsf5pueJkj1k5pHpuLFZf5RUnPnTlIT6009mgszqmD';
+
+            $stripeClient = new \Stripe\StripeClient($connectedAccountSecretKey);
+
+            // Log or output the API key being used
+            \Log::info('Stripe API Key: ' . $stripeClient->getApiKey());
+
+            $readerService = new ReaderService($stripeClient);
+
+            // Simulate a payment on the specified reader
+            return $reader = $readerService->presentPaymentMethod($readerId, [], ['stripe_account' => $connectedAccountId]);
+
+            return response()->json(['reader' => $reader]);
+        } catch (\Exception $e) {
+            return response()->json(['error' => ['message' => $e->getMessage()]]);
+        }
+    }
+
+
     public function transferApplicationFee(Request $request)
     {
         try {
@@ -96,65 +126,6 @@ class StripeController extends Controller
         }
     }
 
-
-    // public function simulatePayment(Request $request)
-    // {
-    //     try {
-    //         // Stripe::setApiKey(config('services.stripe.secret'));
-
-    //         $readerId = $request->input('readerId');
-    //         $connectedAccountId = 'acct_1OCTtILx02PcYbJn';
-
-    //         // Assuming this is the correct way to create a Stripe client instance
-    //         $stripeClient = new \Stripe\StripeClient(config('services.stripe.secret'));
-    //         $readerService = new ReaderService($stripeClient);
-
-    //         // Simulate a payment on the specified reader
-    //         $reader = $readerService->presentPaymentMethod($readerId, [], ['stripe_account' => $connectedAccountId]);
-
-    //         return response()->json(['reader' => $reader]);
-    //     } catch (\Exception $e) {
-    //         return response()->json(['error' => ['message' => $e->getMessage()]]);
-    //     }
-    // }
-
-    public function simulatePayment(Request $request)
-    {
-        try {
-            $readerId = $request->input('readerId');
-            $connectedAccountId = 'acct_1OCTtILx02PcYbJn';
-
-            // Assuming the processPayment method returns the actual amounts
-            $processPaymentResponse = $this->processPayment($request);
-
-            if (is_array($processPaymentResponse) && !empty($processPaymentResponse['error'])) {
-                $actualAmount = $processPaymentResponse['paymentIntent']['amount'];
-                $actualApplicationFee = $processPaymentResponse['application_fee_amount'];
-
-                // Simulate a payment on the specified reader using the existing connection token
-                $simulateResponse = PaymentIntent::create([
-                    'payment_method' => $request->input('payment_method_id'),
-                    'amount' => $actualAmount,
-                    'currency' => 'usd',
-                    'capture_method' => 'manual',
-                    'application_fee_amount' => $actualApplicationFee,
-                    'transfer_data' => [
-                        'destination' => $connectedAccountId,
-                    ],
-                ], ['stripe_account' => $connectedAccountId]);
-
-                return response()->json(['simulateResponse' => $simulateResponse]);
-            } else {
-                // Handle the error from the processPayment method
-                $errorMessage = is_array($processPaymentResponse) ? $processPaymentResponse['error']->getMessage() : 'Unknown error';
-                Log::error('Error in simulatePayment: ' . $errorMessage);
-                return response()->json(['error' => ['message' => $errorMessage]], 500);
-            }
-        } catch (\Exception $e) {
-            Log::error('Error in simulatePayment: ' . $e->getMessage());
-            return response()->json(['error' => ['message' => $e->getMessage(), 'trace' => $e->getTraceAsString()]], 500);
-        }
-    }
 
     public function capturePayment(Request $request)
     {

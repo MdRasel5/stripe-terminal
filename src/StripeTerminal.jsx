@@ -19,7 +19,7 @@ const StripeTerminal = () => {
       try {
         const connectedAccountId = "acct_1OCTtILx02PcYbJn";
         const response = await fetch(
-          `http://127.0.0.1:8000/api/readers?acct_1OCTtILx02PcYbJn=${connectedAccountId}`
+          `http://127.0.0.1:8000/api/readers?connected_account_id=${connectedAccountId}`
         );
         const result = await response.json();
 
